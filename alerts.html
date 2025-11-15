@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ForexPulse — Alertas</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="header card">
+    <div style="display:flex;align-items:center"><div class="brand">ForexPulse</div>
+      <nav class="nav">
+        <a class="btn" href="index.html">Notícias</a>
+        <a class="btn" href="calendar.html">Calendário</a>
+        <a class="btn" href="alerts.html">Alertas</a>
+        <a class="btn" href="performance.html">Performance</a>
+        <a class="btn" href="about.html">Sobre</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>Alertas</h2>
+      <p class="small">Adicione palavras-chave; o site consultará e listará resultados que corresponderem.</p>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input id="alertInput" class="input" placeholder="Ex: EURUSD OR FOMC OR CPI">
+        <button id="addAlert" class="btn primary">Adicionar</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <h4>Seus alertas</h4>
+        <div id="alertsList" class="small"></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <h4>Últimos resultados</h4>
+        <div id="alertResults" class="news-list"></div>
+      </div>
+    </div>
+  </div>
+
+<script src="assets/script.js"></script>
+<script>
+const STORAGE_ALERTS = 'fp_alerts_v1';
+function loadAlerts(){
+  const arr = JSON.parse(localStorage.getItem(STORAGE_ALERTS)||'[]');
+  const list = document.getElementById('alertsList');
+  list.innerHTML = '';
+  if(arr.length===0) list.textContent = 'Nenhum alerta configurado.';
+  else arr.forEach((a,i)=>{
+    const div = document.createElement('div');
+    div.style.display='flex';div.style.justifyContent='space-between';div.style.marginBottom='8px';
+    div.innerHTML = `<div>${a}</div><div><button class="btn" data-i="${i}">Remover</button></div>`;
+    list.appendChild(div);
+  });
+  attachRemove();
+}
+function attachRemove(){
+  document.querySelectorAll('#alertsList button[data-i]').forEach(b=>{
+    b.onclick = () => {
+      const i = Number(b.getAttribute('data-i'));
+      const arr = JSON.parse(localStorage.getItem(STORAGE_ALERTS)||'[]');
+      arr.splice(i,1);
+      localStorage.setItem(STORAGE_ALERTS, JSON.stringify(arr));
+      loadAlerts();
+    };
+  });
+}
+document.getElementById('addAlert').addEventListener('click', async ()=>{
+  const v = document.getElementById('alertInput').value.trim();
+  if(!v) return alert('Digite algo');
+  const arr = JSON.parse(localStorage.getItem(STORAGE_ALERTS)||'[]');
+  arr.push(v);
+  localStorage.setItem(STORAGE_ALERTS, JSON.stringify(arr));
+  loadAlerts();
+  document.getElementById('alertInput').value='';
+  // fetch once
+  const items = await searchAndNotify([v]);
+  renderNewsList(document.getElementById('alertResults'), { items });
+});
+document.addEventListener('DOMContentLoaded', ()=>{
+  loadAlerts();
+  // periodically check alerts
+  setInterval(async ()=>{
+    const arr = JSON.parse(localStorage.getItem(STORAGE_ALERTS)||'[]');
+    if(arr.length===0) return;
+    let all = [];
+    for(const a of arr){
+      const items = await searchAndNotify([a]);
+      all = all.concat(items);
+    }
+    if(all.length) renderNewsList(document.getElementById('alertResults'), { items: all.slice(0,20) });
+  }, 120000);
+});
+</script>
+</body>
+</html>
