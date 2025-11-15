@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ForexPulse — Notícias em tempo real</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="header card">
+    <div style="display:flex;align-items:center;">
+      <div class="brand">ForexPulse</div>
+      <nav class="nav">
+        <a class="btn" href="index.html">Notícias</a>
+        <a class="btn" href="calendar.html">Calendário</a>
+        <a class="btn" href="alerts.html">Alertas</a>
+        <a class="btn" href="performance.html">Performance</a>
+        <a class="btn" href="about.html">Sobre</a>
+      </nav>
+    </div>
+    <div style="margin-left:auto" class="small">Principais pares: EURUSD · GBPUSD · USDJPY · XAUUSD · BTCUSD</div>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <main>
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="flex:1">
+              <div class="searchbar">
+                <input id="qCustom" class="input" placeholder="Pesquisar (ex: USD OR FOMC) — deixar vazio para pares principais">
+                <button id="btnSearch" class="btn">Buscar</button>
+              </div>
+              <div class="small" style="margin-top:8px">Última atualização: <span id="lastUpdate">—</span></div>
+            </div>
+            <div style="width:180px;text-align:right">
+              <div class="small">Idioma</div>
+              <select id="langSel" class="input" style="width:100%;margin-top:6px;padding:8px">
+                <option value="en">EN</option>
+                <option value="pt">PT</option>
+              </select>
+            </div>
+          </div>
+          <div id="newsList" class="news-list"></div>
+        </div>
+      </main>
+
+      <aside class="right-panel">
+        <div class="card">
+          <div class="kv"><div>Resumo</div><div class="pill">Live</div></div>
+          <div style="height:8px"></div>
+          <div class="pair-grid" style="margin-top:10px">
+            <!-- pares rápidos -->
+            <div class="pair"><div>EURUSD</div><div class="pill">—</div></div>
+            <div class="pair"><div>GBPUSD</div><div class="pill">—</div></div>
+            <div class="pair"><div>USDJPY</div><div class="pill">—</div></div>
+            <div class="pair"><div>XAUUSD</div><div class="pill">—</div></div>
+          </div>
+          <div style="margin-top:12px" class="small">Atualizações a cada 2 minutos.</div>
+        </div>
+
+        <div class="card">
+          <h4 style="margin:0 0 8px 0">Top Headlines</h4>
+          <div id="miniHead" class="small">carregando…</div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="footer">Feito por você — demo RSS. Troque para API profissional depois.</div>
+  </div>
+
+  <script src="assets/script.js"></script>
+
+  <script>
+    // search button behavior
+    document.getElementById('btnSearch').addEventListener('click', async ()=>{
+      const q = document.getElementById('qCustom').value.trim();
+      const lang = document.getElementById('langSel').value;
+      if(q){
+        document.getElementById('lastUpdate').textContent = 'Carregando...';
+        try{
+          const data = await fetchNewsFor(encodeURIComponent(q), lang);
+          renderNewsList(document.getElementById('newsList'), data);
+          document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }catch(e){
+          document.getElementById('newsList').innerHTML = `<div class="card small">Erro: ${e.message}</div>`;
+        }
+      } else {
+        // default
+        loadHomeNews();
+      }
+    });
+
+    // top headlines small
+    async function loadMini(){
+      try{
+        const data = await fetchNewsFor(qForPairs(), 'en');
+        if(data && data.items){
+          const titles = data.items.slice(0,5).map(i => i.title);
+          document.getElementById('miniHead').innerHTML = titles.join('<br>');
+        }
+      }catch(e){ document.getElementById('miniHead').textContent = 'Erro'; }
+    }
+    loadMini();
+    setInterval(loadMini, 120000);
+  </script>
+</body>
+</html>
