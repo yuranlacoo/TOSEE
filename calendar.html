@@ -1,38 +1,59 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ForexPulse — Calendário</title>
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<link rel="stylesheet" href="assets/style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TOSEE — Calendário</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-  <header class="header card">
-    <div style="display:flex;align-items:center"><div class="brand">ForexPulse</div>
-      <nav class="nav">
-        <a class="btn" href="index.html">Notícias</a>
-        <a class="btn" href="calendar.html">Calendário</a>
-        <a class="btn" href="alerts.html">Alertas</a>
-        <a class="btn" href="performance.html">Performance</a>
-        <a class="btn" href="about.html">Sobre</a>
-      </nav>
+  <header class="topbar">
+    <div class="brand">TOSEE</div>
+    <nav class="topnav">
+      <a href="index.html">Notícias</a>
+      <a href="calendar.html" class="active">Calendário</a>
+      <a href="alerts.html">Alertas</a>
+      <a href="performance.html">Performance</a>
+      <a href="about.html">Sobre</a>
+    </nav>
+    <div class="tools">
+      <select id="langSelectCal"><option value="pt">PT</option><option value="en">EN</option></select>
     </div>
   </header>
 
-  <div class="container">
-    <div class="card">
-      <h2>Calendário Econômico (via RSS)</h2>
-      <div class="small">Fonte: Google News (busca por "economic calendar"). Atualiza automaticamente.</div>
-      <div style="margin-top:12px">Última atualização: <span id="calUpdate">—</span></div>
-      <div id="calList" class="news-list" style="margin-top:12px"></div>
-    </div>
-  </div>
+  <main class="container calendar-page">
+    <section class="calendar-left">
+      <div class="stats-row">
+        <div class="stat-box"><strong id="statTotal">—</strong><div class="muted">Total Eventos</div></div>
+        <div class="stat-box"><strong id="statHigh">—</strong><div class="muted">Alto</div></div>
+        <div class="stat-box"><strong id="statMed">—</strong><div class="muted">Médio</div></div>
+        <div class="stat-box"><strong id="statLow">—</strong><div class="muted">Baixo</div></div>
+      </div>
+
+      <div class="month-nav">
+        <button id="prevMonth" class="btn-ghost">⬅</button>
+        <h2 id="monthYear">Mês</h2>
+        <button id="nextMonth" class="btn-ghost">➡</button>
+      </div>
+
+      <div id="calendarGrid" class="calendar-grid"></div>
+    </section>
+
+    <aside class="calendar-right">
+      <div class="card">
+        <div class="card-title">Legenda</div>
+        <div class="muted">Verde = Alto • Amarelo = Médio • Cinza = Baixo</div>
+      </div>
+
+      <div class="card" id="dayEventsCard">
+        <div class="card-title">Eventos do dia</div>
+        <div id="dayEvents">Clique num dia</div>
+      </div>
+    </aside>
+  </main>
 
   <script src="assets/script.js"></script>
-  <script>
-    // script.js já expõe loadCalendarNews
-    // chamada apenas para garantir execução
-    // loadCalendarNews é chamada automaticamente se existir #calList
-  </script>
 </body>
 </html>
+
