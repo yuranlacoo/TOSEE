@@ -1,59 +1,208 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>TOSEE — Calendário</title>
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
-  <link rel="stylesheet" href="assets/style.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TOSEE — Calendário</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<style>
+  :root{
+    --bg:#0b0f12; --panel:#111418; --muted:#9aa0a6; --accent:#00e0ff;
+    --impact-high:#d9534f; --impact-mid:#f0ad4e; --impact-low:#6c6c6c;
+    --card-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:#e8f6fb}
+  header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.02)}
+  .brand{font-weight:800;color:var(--accent);letter-spacing:0.6px}
+  nav{display:flex;gap:10px}
+  nav a{color:var(--muted);padding:8px 10px;border-radius:8px;text-decoration:none}
+  nav a.active{color:#001;background:var(--accent)}
+  main{display:flex;gap:18px;padding:18px}
+  .left{flex:1}
+  .right{width:320px}
+  .card{background:var(--panel);padding:12px;border-radius:10px;box-shadow:var(--card-shadow);margin-bottom:12px}
+  .card-title{font-weight:700;color:var(--muted);margin-bottom:8px}
+  .stats{display:flex;gap:8px;margin-bottom:12px}
+  .stat-box{flex:1;background:rgba(255,255,255,0.02);padding:12px;border-radius:8px;text-align:center}
+  .month-nav{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .day{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;min-height:100px;position:relative;cursor:pointer}
+  .day .number{font-weight:700;margin-bottom:8px}
+  .day .events{font-size:13px;color:var(--muted)}
+  .day.high{background:var(--impact-high);color:#fff}
+  .day.mid{background:var(--impact-mid);color:#08110b}
+  .day.low{background:var(--impact-low);color:#fff}
+  .legend{display:flex;gap:8px;align-items:center}
+  .legend .item{display:flex;gap:6px;align-items:center}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .dot.high{background:var(--impact-high)} .dot.mid{background:var(--impact-mid)} .dot.low{background:var(--impact-low)}
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);z-index:9999}
+  .modal .panel{background:var(--panel);padding:14px;border-radius:10px;min-width:320px;max-width:900px}
+  footer{padding:12px;text-align:center;color:var(--muted)}
+  @media(max-width:980px){main{flex-direction:column;padding:12px}.right{width:100%}}
+</style>
 </head>
 <body>
-  <header class="topbar">
+<header>
+  <div style="display:flex;gap:18px;align-items:center">
     <div class="brand">TOSEE</div>
-    <nav class="topnav">
+    <nav>
       <a href="index.html">Notícias</a>
       <a href="calendar.html" class="active">Calendário</a>
-      <a href="alerts.html">Alertas</a>
-      <a href="performance.html">Performance</a>
-      <a href="about.html">Sobre</a>
     </nav>
-    <div class="tools">
-      <select id="langSelectCal"><option value="pt">PT</option><option value="en">EN</option></select>
-    </div>
-  </header>
+  </div>
+  <div>
+    <button id="prevMonth" class="btn-ghost">←</button>
+    <button id="nextMonth" class="btn-ghost">→</button>
+  </div>
+</header>
 
-  <main class="container calendar-page">
-    <section class="calendar-left">
-      <div class="stats-row">
-        <div class="stat-box"><strong id="statTotal">—</strong><div class="muted">Total Eventos</div></div>
-        <div class="stat-box"><strong id="statHigh">—</strong><div class="muted">Alto</div></div>
-        <div class="stat-box"><strong id="statMed">—</strong><div class="muted">Médio</div></div>
-        <div class="stat-box"><strong id="statLow">—</strong><div class="muted">Baixo</div></div>
-      </div>
-
+<main>
+  <section class="left">
+    <div class="card">
+      <div class="card-title">Calendário de Eventos</div>
       <div class="month-nav">
-        <button id="prevMonth" class="btn-ghost">⬅</button>
-        <h2 id="monthYear">Mês</h2>
-        <button id="nextMonth" class="btn-ghost">➡</button>
+        <h2 id="monthYear" style="margin:0"></h2>
+      </div>
+      <div id="calendarGrid" class="calendar-grid"></div>
+    </div>
+  </section>
+
+  <aside class="right">
+    <div class="card">
+      <div class="card-title">Estatísticas mensais</div>
+      <div class="stats">
+        <div class="stat-box"><div id="stTotal">0</div><div class="muted">Total</div></div>
+        <div class="stat-box"><div id="stHigh">0</div><div class="muted">Alto</div></div>
+        <div class="stat-box"><div id="stMid">0</div><div class="muted">Médio</div></div>
+        <div class="stat-box"><div id="stLow">0</div><div class="muted">Baixo</div></div>
       </div>
 
-      <div id="calendarGrid" class="calendar-grid"></div>
-    </section>
-
-    <aside class="calendar-right">
       <div class="card">
         <div class="card-title">Legenda</div>
-        <div class="muted">Verde = Alto • Amarelo = Médio • Cinza = Baixo</div>
+        <div class="legend">
+          <div class="item"><span class="dot high"></span> Alto</div>
+          <div class="item"><span class="dot mid"></span> Médio</div>
+          <div class="item"><span class="dot low"></span> Baixo</div>
+        </div>
       </div>
+    </div>
+  </aside>
+</main>
 
-      <div class="card" id="dayEventsCard">
-        <div class="card-title">Eventos do dia</div>
-        <div id="dayEvents">Clique num dia</div>
-      </div>
-    </aside>
-  </main>
+<!-- modal -->
+<div class="modal" id="modal">
+  <div class="panel">
+    <h3 id="mTitle">Eventos do dia</h3>
+    <div id="mBody" style="margin-top:8px"></div>
+    <div style="text-align:right;margin-top:12px"><button id="mClose" class="btn-ghost">Fechar</button></div>
+  </div>
+</div>
 
-  <script src="assets/script.js"></script>
+<footer>
+  <div class="small muted">Os eventos são lidos de localStorage. Adicione no feed (Notícias) para que apareçam aqui.</div>
+</footer>
+
+<script>
+/*
+  calendar.html:
+  - lê localStorage 'tosee_items'
+  - renderiza calendário por mês, colorindo dias por impacto
+  - abre modal com lista de eventos do dia
+  - atualiza automaticamente via storage event
+*/
+(() => {
+  const KEY = 'tosee_items';
+  const $=id=>document.getElementById(id);
+  let cur = new Date(); // current month view
+
+  function load(){ return JSON.parse(localStorage.getItem(KEY) || '[]'); }
+  function iso(y,m,d){ return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+  function monthTitle(dt){ return dt.toLocaleString('pt-BR',{month:'long',year:'numeric'}); }
+
+  function render(){
+    const year = cur.getFullYear(), month = cur.getMonth();
+    $('monthYear').innerText = monthTitle(cur).replace(/^\w/,c=>c.toUpperCase());
+    const firstDay = new Date(year, month, 1).getDay(); // 0..6 (Sun..Sat)
+    const days = new Date(year, month+1, 0).getDate();
+    const grid = $('calendarGrid'); grid.innerHTML='';
+    // week start: Monday preferred in many locales; here we will align so Monday=1
+    // produce leading blanks (if firstDay==0 (Sun) we add 6 blanks to start Monday)
+    const leading = (firstDay === 0) ? 6 : firstDay - 1;
+    for(let i=0;i<leading;i++){ const e = document.createElement('div'); grid.appendChild(e); }
+
+    const items = load();
+    // group by isoDate
+    const grouped = {};
+    items.forEach(it=>{
+      const d = it.date;
+      if(!d) return;
+      if(!grouped[d]) grouped[d]=[];
+      grouped[d].push(it);
+    });
+
+    let total=0, h=0,m=0,l=0;
+    for(let d=1; d<=days; d++){
+      const isoDate = iso(year, month+1, d);
+      const dayDiv = document.createElement('div'); dayDiv.className='day';
+      const num = document.createElement('div'); num.className='number'; num.innerText = d;
+      dayDiv.appendChild(num);
+      const evs = grouped[isoDate] || [];
+      if(evs.length){
+        // compute aggregate impact priority: if any 'high' -> high; else if any mid -> mid; else low
+        let priority = 'low';
+        if(evs.some(x=>x.impact==='high')) priority='high';
+        else if(evs.some(x=>x.impact==='mid')) priority='mid';
+        dayDiv.classList.add(priority==='high'?'high':priority==='mid'?'mid':'low');
+
+        const evSummary = document.createElement('div'); evSummary.className='events';
+        evSummary.innerHTML = `<strong>${evs.length}</strong> evento(s)`;
+        dayDiv.appendChild(evSummary);
+
+        total += evs.length;
+        if(priority==='high') h += evs.length;
+        else if(priority==='mid') m += evs.length;
+        else l += evs.length;
+      }
+      // click -> open modal with events
+      dayDiv.onclick = ()=> openDay(isoDate, evs, d);
+      grid.appendChild(dayDiv);
+    }
+    $('stTotal').innerText = total;
+    $('stHigh').innerText = h;
+    $('stMid').innerText = m;
+    $('stLow').innerText = l;
+  }
+
+  function openDay(isoDate, evs, dayNumber){
+    $('modal').style.display='flex';
+    $('mTitle').innerText = `Eventos — ${isoDate}`;
+    const body = $('mBody'); body.innerHTML = '';
+    if(!evs.length){ body.innerHTML = '<div class="muted">Nenhum evento neste dia</div>'; return; }
+    evs.forEach(it=>{
+      const div = document.createElement('div'); div.style.marginBottom='10px';
+      const title = document.createElement('div'); title.style.fontWeight='700'; title.style.color='var(--accent)'; title.innerText = it.title;
+      const meta = document.createElement('div'); meta.className='muted'; meta.innerText = `${it.source||'—'} • Impacto: ${it.impact}`;
+      const summary = document.createElement('div'); summary.className='muted'; summary.style.marginTop='6px'; summary.innerText = it.summary || '';
+      const open = document.createElement('a'); open.href = it.link || '#'; open.target='_blank'; open.className='btn-ghost'; open.innerText='Abrir fonte';
+      div.appendChild(title); div.appendChild(meta); div.appendChild(summary); div.appendChild(open);
+      body.appendChild(div);
+    });
+  }
+
+  $('mClose').onclick = ()=> $('modal').style.display='none';
+  $('prevMonth').onclick = ()=> { cur.setMonth(cur.getMonth()-1); render(); };
+  $('nextMonth').onclick = ()=> { cur.setMonth(cur.getMonth()+1); render(); };
+
+  // listen for changes from index.html (storage events)
+  window.addEventListener('storage', (ev)=>{
+    if(ev.key === 'tosee_items' || ev.key === 'tosee_items_updated_at') render();
+  });
+
+  // initial render
+  document.addEventListener('DOMContentLoaded', render);
+})();
+</script>
 </body>
 </html>
-
